@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input"
 import { AnimatedButton } from "@/components/ui/animated-button"
 import { GradientCard } from "@/components/ui/gradient-card"
 import { useToast } from "@/hooks/use-toast"
+import { useNavigate } from "react-router-dom"
 
 export function VideoInput() {
   const [url, setUrl] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const handlePaste = async () => {
     try {
@@ -42,10 +44,7 @@ export function VideoInput() {
     // Simulate processing
     setTimeout(() => {
       setIsProcessing(false)
-      toast({
-        title: "Video loaded!",
-        description: "Your video is ready for clipping. Select the parts you want to download."
-      })
+      navigate(`/process?url=${encodeURIComponent(url)}`)
     }, 2000)
   }
 
