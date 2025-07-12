@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, Link } from "react-router-dom"
-import { ArrowLeft, Download, Play, Pause } from "lucide-react"
+import { ArrowLeft, Download, Play, Pause, Clock, User, Eye } from "lucide-react"
 import { AnimatedButton } from "@/components/ui/animated-button"
 import { GradientCard } from "@/components/ui/gradient-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -10,9 +10,29 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useToast } from "@/hooks/use-toast"
 
+// Function to extract YouTube video ID from URL
+const extractVideoId = (url: string): string | null => {
+  const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+// Mock video data - in real app this would come from YouTube API
+const getVideoInfo = (videoId: string) => {
+  // This is mock data - in production you'd fetch from YouTube API
+  return {
+    title: "Sade - Smooth Operator - Official - 1984",
+    channel: "YRF",
+    duration: "04:18",
+    views: "2.1M views"
+  }
+}
+
 const ProcessVideo = () => {
   const [searchParams] = useSearchParams()
   const videoUrl = searchParams.get('url') || ''
+  const videoId = extractVideoId(videoUrl)
+  const videoInfo = videoId ? getVideoInfo(videoId) : null
   const [isPlaying, setIsPlaying] = useState(false)
   const [startTime, setStartTime] = useState("00:00")
   const [endTime, setEndTime] = useState("04:18")
@@ -68,32 +88,53 @@ const ProcessVideo = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Video Player Section */}
           <div className="space-y-4">
-            <GradientCard variant="glass" className="p-6">
-              <div className="aspect-video bg-muted/20 rounded-lg border border-border/20 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10"></div>
-                <div className="text-center space-y-4 z-10">
-                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
-                    {isPlaying ? (
-                      <Pause className="h-8 w-8 text-primary" />
-                    ) : (
-                      <Play className="h-8 w-8 text-primary" />
-                    )}
+            {/* Video Info */}
+            {videoInfo && (
+              <GradientCard variant="glass" className="p-4">
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold text-foreground">{videoInfo.title}</h2>
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-1">
+                      <User className="h-4 w-4" />
+                      <span>{videoInfo.channel}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{videoInfo.duration}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Eye className="h-4 w-4" />
+                      <span>{videoInfo.views}</span>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">Video Preview</p>
-                  <p className="text-xs text-muted-foreground/70 max-w-xs mx-auto break-all">
-                    {videoUrl}
-                  </p>
                 </div>
-              </div>
-              
-              <div className="mt-4">
-                <Button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {isPlaying ? "Pause" : "Play"} Preview
-                </Button>
+              </GradientCard>
+            )}
+
+            {/* Video Player */}
+            <GradientCard variant="glass" className="p-6">
+              <div className="aspect-video rounded-lg overflow-hidden border border-border/20">
+                {videoId ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&modestbranding=1&rel=0`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted/20 flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
+                        <Play className="h-8 w-8 text-primary" />
+                      </div>
+                      <p className="text-muted-foreground">Invalid YouTube URL</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </GradientCard>
           </div>
