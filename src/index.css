@@ -88,10 +88,6 @@
     min-height: 100vh;
   }
 
-  html {
-    @apply dark;
-  }
-
   /* Glass morphism effect */
   .glass {
     background: var(--gradient-glass);
