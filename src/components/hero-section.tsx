@@ -10,13 +10,7 @@ export function HeroSection() {
           <h1 className="text-2xl font-bold neon-text">ClipIt</h1>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="hidden md:block text-sm glass px-4 py-2 rounded-full">
-            <span className="text-accent font-medium">🎧 New:</span>
-            <span className="ml-2">Download Entire Playlist</span>
-          </div>
-          <ThemeToggle />
-        </div>
+        
       </header>
 
       {/* Main Hero Content */}
