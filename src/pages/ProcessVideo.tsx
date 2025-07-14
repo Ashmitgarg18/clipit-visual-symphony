@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
-import { useSearchParams, Link } from "react-router-dom"
-import { ArrowLeft, Download, Play, Pause, Clock, User, Eye, Youtube, Twitter } from "lucide-react"
+import { useSearchParams, Link, useNavigate } from "react-router-dom"
+import { ArrowLeft, Download, Play, Pause, Clock, User, Eye, Youtube, Twitter, Clipboard } from "lucide-react"
 import { AnimatedButton } from "@/components/ui/animated-button"
 import { GradientCard } from "@/components/ui/gradient-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -56,9 +56,11 @@ const getVideoInfo = (videoId: string, platform: PlatformMode) => {
 
 const ProcessVideo = () => {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const videoUrl = searchParams.get('url') || ''
   const detectedPlatform = detectPlatform(videoUrl)
   const [platform, setPlatform] = useState<PlatformMode>(detectedPlatform)
+  const [newUrl, setNewUrl] = useState("")
   
   const videoId = platform === 'youtube' ? extractYouTubeId(videoUrl) : extractTwitterId(videoUrl)
   const videoInfo = videoId ? getVideoInfo(videoId, platform) : null
@@ -93,6 +95,53 @@ const ProcessVideo = () => {
     toast({
       title: "Download started!",
       description: "Your video is being processed and will download shortly."
+    })
+  }
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      setNewUrl(text)
+      toast({
+        title: "URL Pasted!",
+        description: "URL has been pasted from clipboard."
+      })
+    } catch (err) {
+      toast({
+        title: "Paste failed",
+        description: "Could not access clipboard. Please paste manually.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleProcessNewUrl = () => {
+    if (!newUrl) {
+      toast({
+        title: "No URL provided",
+        description: `Please enter a ${platform === 'youtube' ? 'YouTube' : 'Twitter/X'} URL.`,
+        variant: "destructive"
+      })
+      return
+    }
+
+    const newVideoId = platform === 'youtube' ? extractYouTubeId(newUrl) : extractTwitterId(newUrl)
+    
+    if (!newVideoId) {
+      toast({
+        title: "Invalid URL",
+        description: `Please enter a valid ${platform === 'youtube' ? 'YouTube' : 'Twitter/X'} URL.`,
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Update the URL and navigate
+    navigate(`/process?url=${encodeURIComponent(newUrl)}`)
+    setNewUrl("")
+    toast({
+      title: "URL Updated!",
+      description: "Processing new video URL."
     })
   }
 
@@ -206,6 +255,45 @@ const ProcessVideo = () => {
                 )}
               </div>
             </GradientCard>
+
+            {/* URL Input for Invalid URLs */}
+            {!videoId && (
+              <GradientCard variant="glass" className="p-6 hover:scale-[1.02] transition-all animate-scale-in">
+                <div className="text-center space-y-4">
+                  <h3 className="text-lg font-semibold neon-text flex items-center justify-center space-x-2">
+                    <span>Enter {platform === 'youtube' ? 'YouTube' : 'Twitter/X'} URL</span>
+                    {platform === 'youtube' && <Youtube className="h-5 w-5 text-red-400" />}
+                    {platform === 'twitter' && <Twitter className="h-5 w-5 text-blue-400" />}
+                  </h3>
+                  
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder={`Paste ${platform === 'youtube' ? 'YouTube' : 'Twitter/X'} URL here...`}
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      className="flex-1 glass text-foreground placeholder:text-muted-foreground border-primary/20 focus:border-primary transition-all"
+                    />
+                    <AnimatedButton
+                      variant="glass"
+                      size="icon"
+                      onClick={handlePaste}
+                      className="shrink-0 hover:scale-110 transition-all"
+                    >
+                      <Clipboard className="h-4 w-4" />
+                    </AnimatedButton>
+                  </div>
+
+                  <AnimatedButton
+                    variant="neon"
+                    onClick={handleProcessNewUrl}
+                    className="w-full hover:scale-105 transition-all"
+                  >
+                    <Play className="h-4 w-4" />
+                    Load {platform === 'youtube' ? 'Video' : 'Clip'}
+                  </AnimatedButton>
+                </div>
+              </GradientCard>
+            )}
           </div>
 
           {/* Controls Section */}
