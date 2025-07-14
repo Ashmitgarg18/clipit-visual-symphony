@@ -1,38 +1,67 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, Link } from "react-router-dom"
-import { ArrowLeft, Download, Play, Pause, Clock, User, Eye } from "lucide-react"
+import { ArrowLeft, Download, Play, Pause, Clock, User, Eye, Youtube, Twitter } from "lucide-react"
 import { AnimatedButton } from "@/components/ui/animated-button"
 import { GradientCard } from "@/components/ui/gradient-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useToast } from "@/hooks/use-toast"
 
+type PlatformMode = 'youtube' | 'twitter'
+
 // Function to extract YouTube video ID from URL
-const extractVideoId = (url: string): string | null => {
+const extractYouTubeId = (url: string): string | null => {
   const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
   const match = url.match(regex)
   return match ? match[1] : null
 }
 
-// Mock video data - in real app this would come from YouTube API
-const getVideoInfo = (videoId: string) => {
-  // This is mock data - in production you'd fetch from YouTube API
-  return {
-    title: "Sade - Smooth Operator - Official - 1984",
-    channel: "YRF",
-    duration: "04:18",
-    views: "2.1M views"
+// Function to extract Twitter/X video ID from URL
+const extractTwitterId = (url: string): string | null => {
+  const regex = /(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/
+  const match = url.match(regex)
+  return match ? match[1] : null
+}
+
+// Determine platform from URL
+const detectPlatform = (url: string): PlatformMode => {
+  if (extractYouTubeId(url)) return 'youtube'
+  if (extractTwitterId(url)) return 'twitter'
+  return 'youtube' // default
+}
+
+// Mock video data - in real app this would come from respective APIs
+const getVideoInfo = (videoId: string, platform: PlatformMode) => {
+  // This is mock data - in production you'd fetch from YouTube/Twitter API
+  if (platform === 'youtube') {
+    return {
+      title: "Sade - Smooth Operator - Official - 1984",
+      channel: "YRF",
+      duration: "04:18",
+      views: "2.1M views"
+    }
+  } else {
+    return {
+      title: "Amazing Twitter Video Clip",
+      channel: "@username",
+      duration: "00:45",
+      views: "15.2K views"
+    }
   }
 }
 
 const ProcessVideo = () => {
   const [searchParams] = useSearchParams()
   const videoUrl = searchParams.get('url') || ''
-  const videoId = extractVideoId(videoUrl)
-  const videoInfo = videoId ? getVideoInfo(videoId) : null
+  const detectedPlatform = detectPlatform(videoUrl)
+  const [platform, setPlatform] = useState<PlatformMode>(detectedPlatform)
+  
+  const videoId = platform === 'youtube' ? extractYouTubeId(videoUrl) : extractTwitterId(videoUrl)
+  const videoInfo = videoId ? getVideoInfo(videoId, platform) : null
   const [isPlaying, setIsPlaying] = useState(false)
   const [startTime, setStartTime] = useState("00:00")
   const [endTime, setEndTime] = useState("04:18")
@@ -67,42 +96,70 @@ const ProcessVideo = () => {
     })
   }
 
+  // Dynamic background based on platform
+  const getBackgroundClass = () => {
+    if (platform === 'youtube') {
+      return "min-h-screen bg-gradient-to-br from-red-950/20 via-background to-red-900/10 animate-gradient-x"
+    } else {
+      return "min-h-screen bg-gradient-to-br from-blue-950/20 via-background to-slate-900/10 animate-gradient-x"
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-accent/5">
+    <div className={getBackgroundClass()}>
       {/* Header */}
-      <header className="border-b border-border/20 backdrop-blur-sm bg-background/50 sticky top-0 z-50">
+      <header className="border-b border-border/20 backdrop-blur-sm bg-background/50 sticky top-0 z-50 animate-fade-in">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" size="icon" className="hover:scale-110 transition-all">
+              <Button variant="ghost" size="icon" className="hover:scale-110 transition-all animate-scale-in">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <h1 className="text-xl font-bold neon-text">ClipIt</h1>
           </div>
-          <ThemeToggle />
+          
+          {/* Platform Toggle */}
+          <div className="flex items-center space-x-4 animate-fade-in">
+            <div className="flex items-center space-x-3 bg-background/20 backdrop-blur-sm rounded-full px-4 py-2 border border-border/20">
+              <div className={`flex items-center space-x-2 transition-all ${platform === 'youtube' ? 'text-red-400' : 'text-muted-foreground'}`}>
+                <Youtube className="h-4 w-4" />
+                <span className="text-sm font-medium">YouTube</span>
+              </div>
+              <Switch 
+                checked={platform === 'twitter'} 
+                onCheckedChange={(checked) => setPlatform(checked ? 'twitter' : 'youtube')}
+                className="transition-all hover:scale-105"
+              />
+              <div className={`flex items-center space-x-2 transition-all ${platform === 'twitter' ? 'text-blue-400' : 'text-muted-foreground'}`}>
+                <Twitter className="h-4 w-4" />
+                <span className="text-sm font-medium">Twitter/X</span>
+              </div>
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
           {/* Video Player Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 animate-scale-in">
             {/* Video Info */}
             {videoInfo && (
-              <GradientCard variant="glass" className="p-4">
+              <GradientCard variant="glass" className="p-4 hover:scale-[1.02] transition-all animate-fade-in">
                 <div className="space-y-2">
-                  <h2 className="text-lg font-semibold text-foreground">{videoInfo.title}</h2>
+                  <h2 className="text-lg font-semibold text-foreground animate-fade-in">{videoInfo.title}</h2>
                   <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1 hover:text-primary transition-colors">
                       <User className="h-4 w-4" />
                       <span>{videoInfo.channel}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1 hover:text-primary transition-colors">
                       <Clock className="h-4 w-4" />
                       <span>{videoInfo.duration}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1 hover:text-primary transition-colors">
                       <Eye className="h-4 w-4" />
                       <span>{videoInfo.views}</span>
                     </div>
@@ -112,26 +169,38 @@ const ProcessVideo = () => {
             )}
 
             {/* Video Player */}
-            <GradientCard variant="glass" className="p-6">
-              <div className="aspect-video rounded-lg overflow-hidden border border-border/20">
+            <GradientCard variant="glass" className="p-6 hover:scale-[1.01] transition-all animate-scale-in">
+              <div className="aspect-video rounded-lg overflow-hidden border border-border/20 shadow-lg">
                 {videoId ? (
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&modestbranding=1&rel=0`}
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="w-full h-full"
-                  />
+                  platform === 'youtube' ? (
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&modestbranding=1&rel=0`}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="w-full h-full animate-fade-in"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-950/20 to-slate-900/20 flex items-center justify-center animate-fade-in">
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                          <Twitter className="h-8 w-8 text-blue-400" />
+                        </div>
+                        <p className="text-blue-300">Twitter/X Video Preview</p>
+                        <p className="text-xs text-muted-foreground">Twitter embed will be implemented with API</p>
+                      </div>
+                    </div>
+                  )
                 ) : (
-                  <div className="w-full h-full bg-muted/20 flex items-center justify-center">
+                  <div className="w-full h-full bg-muted/20 flex items-center justify-center animate-fade-in">
                     <div className="text-center space-y-4">
-                      <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
+                      <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
                         <Play className="h-8 w-8 text-primary" />
                       </div>
-                      <p className="text-muted-foreground">Invalid YouTube URL</p>
+                      <p className="text-muted-foreground">Invalid {platform === 'youtube' ? 'YouTube' : 'Twitter/X'} URL</p>
                     </div>
                   </div>
                 )}
@@ -140,10 +209,14 @@ const ProcessVideo = () => {
           </div>
 
           {/* Controls Section */}
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in delay-200">
             {/* Quality Settings */}
-            <GradientCard variant="glass" className="p-6">
-              <h3 className="text-lg font-semibold mb-4 neon-text">Quality Settings</h3>
+            <GradientCard variant="glass" className="p-6 hover:scale-[1.02] transition-all animate-scale-in">
+              <h3 className="text-lg font-semibold mb-4 neon-text flex items-center space-x-2">
+                <span>Quality Settings</span>
+                {platform === 'youtube' && <Youtube className="h-5 w-5 text-red-400" />}
+                {platform === 'twitter' && <Twitter className="h-5 w-5 text-blue-400" />}
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Video Quality</Label>
@@ -178,7 +251,7 @@ const ProcessVideo = () => {
             </GradientCard>
 
             {/* Time Range */}
-            <GradientCard variant="glass" className="p-6">
+            <GradientCard variant="glass" className="p-6 hover:scale-[1.02] transition-all animate-scale-in delay-100">
               <h3 className="text-lg font-semibold mb-4 neon-text">Time Range</h3>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -222,7 +295,7 @@ const ProcessVideo = () => {
             </GradientCard>
 
             {/* Conversion Options */}
-            <GradientCard variant="glass" className="p-6">
+            <GradientCard variant="glass" className="p-6 hover:scale-[1.02] transition-all animate-scale-in delay-200">
               <h3 className="text-lg font-semibold mb-4 neon-text">Conversion Options</h3>
               
               <div className="grid grid-cols-2 gap-4">
@@ -291,10 +364,10 @@ const ProcessVideo = () => {
             <AnimatedButton
               variant="neon"
               onClick={handleDownload}
-              className="w-full py-3"
+              className="w-full py-3 animate-scale-in delay-300 hover:scale-105 transition-all"
             >
               <Download className="h-5 w-5" />
-              Download Video
+              Download {platform === 'youtube' ? 'Video' : 'Clip'}
             </AnimatedButton>
           </div>
         </div>
