@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.zip
+
+.yarn/cache
+.yarn/install-state.gz
+.pnp.*
