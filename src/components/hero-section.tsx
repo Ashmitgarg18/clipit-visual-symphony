@@ -1,16 +1,38 @@
 import { VideoInput } from "./video-input";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import clipitLogo from "@/assets/clipit-logo.png";
+import { useEffect, useState } from "react";
+import { getTodo } from "../api/api";
 export function HeroSection() {
-  return <div className="relative min-h-screen flex flex-col">
+  const [todo, setTodo] = useState(null); // useState<any> since no types
+
+  useEffect(() => {
+    const fetchTodo = async () => {
+      try {
+        const data = await getTodo();
+        setTodo(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchTodo();
+  }, []);
+
+  console.log(todo);
+  return (
+    <div className="relative min-h-screen flex flex-col">
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6">
         <div className="flex items-center space-x-3">
-          <img src={clipitLogo} alt="ClipIt Logo" className="h-10 w-10 floating" draggable="false" />
+          <img
+            src={clipitLogo}
+            alt="ClipIt Logo"
+            className="h-10 w-10 floating"
+            draggable="false"
+          />
           <h1 className="text-2xl font-bold neon-text">ClipIt</h1>
         </div>
-        
-        
       </header>
 
       {/* Main Hero Content */}
@@ -18,12 +40,18 @@ export function HeroSection() {
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 gradient-bg rounded-full blur-3xl opacity-20 animate-float" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-secondary to-accent rounded-full blur-3xl opacity-20 animate-float" style={{
-          animationDelay: "2s"
-        }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary to-secondary rounded-full blur-3xl opacity-10 animate-float" style={{
-          animationDelay: "4s"
-        }} />
+          <div
+            className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-secondary to-accent rounded-full blur-3xl opacity-20 animate-float"
+            style={{
+              animationDelay: "2s",
+            }}
+          />
+          <div
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary to-secondary rounded-full blur-3xl opacity-10 animate-float"
+            style={{
+              animationDelay: "4s",
+            }}
+          />
         </div>
 
         {/* Hero Text */}
@@ -31,7 +59,7 @@ export function HeroSection() {
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             <span className="neon-text">ClipIt</span>
           </h1>
-          
+
           <div className="space-y-2">
             <p className="text-xl md:text-2xl text-muted-foreground">
               download just the part you need
@@ -48,7 +76,7 @@ export function HeroSection() {
         </div>
 
         {/* Demo Video Section */}
-        
       </main>
-    </div>;
+    </div>
+  );
 }
